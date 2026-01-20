@@ -1,3 +1,5 @@
+import streamlit as st
+
 def get_mbti_recommendation(mbti):
     mbti = mbti.upper().strip()
     

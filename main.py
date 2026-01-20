@@ -1,58 +1,85 @@
 import streamlit as st
-import pandas as pd
+import time
 
-# 1. 데이터 설정
-mbti_data = {
-    "ISTJ": {"title": "청렴결백한 논리주의자", "jobs": "회계사, 공무원, 군인, 감사관", "desc": "철저하고 규칙을 준수하며 사실에 근거해 사고합니다."},
-    "ISFJ": {"title": "용감한 수호자", "jobs": "간호사, 초등교사, 사회복지사, 사서", "desc": "타인을 돕는 것에 보람을 느끼며 책임감이 강합니다."},
-    "INFJ": {"title": "선의의 옹호자", "jobs": "상담심리사, 작가, 교수, 인사팀(HR)", "desc": "통찰력이 뛰어나고 사람들에게 영감을 주는 일을 선호합니다."},
-    "INTJ": {"title": "용의주도한 전략가", "jobs": "SW 개발자, 전략 기획자, 과학자", "desc": "분석적이고 독립적이며 복잡한 문제를 해결하는 것을 즐깁니다."},
-    "ISTP": {"title": "만능 재주꾼", "jobs": "엔지니어, 파일럿, 경찰관, 시스템 분석가", "desc": "객관적이고 합리적이며 도구를 다루는 실용적인 일에 능합니다."},
-    "ISFP": {"title": "호기심 많은 예술가", "jobs": "디자이너, 사진작가, 수의사, 플로리스트", "desc": "말없이 다정하며 현재의 삶을 즐기고 미적 감각이 뛰어납니다."},
-    "INFP": {"title": "열정적인 중재자", "jobs": "작가, 심리치료사, 콘텐츠 크리에이터", "desc": "자신만의 가치를 중시하며 공감 능력이 뛰어나고 창의적입니다."},
-    "INTP": {"title": "논리적인 사색가", "jobs": "대학교수, 프로그래머, 물리학자, 경제학자", "desc": "아이디어와 이론에 관심이 많으며 비평적인 관점을 가졌습니다."},
-    "ESTP": {"title": "모험을 즐기는 사업가", "jobs": "영업사원, 소방관, 기업가, 스포츠 매니저", "desc": "활동적이고 직설적이며 문제 상황에서 빠른 대처 능력을 보입니다."},
-    "ESFP": {"title": "자유로운 영혼의 연예인", "jobs": "배우, 이벤트 플래너, 홍보 전문가, 승무원", "desc": "사교적이고 낙천적이며 사람들과 함께하는 분위기를 주도합니다."},
-    "ENFP": {"title": "재기발랄한 활동가", "jobs": "마케터, 저널리스트, 카피라이터, 파티 플래너", "desc": "열정적이고 상상력이 풍부하며 새로운 가능성을 찾아냅니다."},
-    "ENTP": {"title": "뜨거운 논쟁을 즐기는 변론가", "jobs": "변호사, 정치인, 발명가, 광고 감독", "desc": "지적인 도전 정신이 강하며 새로운 아이디어를 제안하는 데 능합니다."},
-    "ESTJ": {"title": "엄격한 관리자", "jobs": "경영자, 법조인, 프로젝트 매니저, 군 장교", "desc": "체계적이고 현실적이며 조직을 관리하고 이끄는 데 탁월합니다."},
-    "ESFJ": {"title": "사교적인 외교관", "jobs": "교사, 홍보 담당자, 호텔리어, 고객 서비스", "desc": "협동을 중시하며 타인의 요구에 민감하게 반응하고 조화를 이룹니다."},
-    "ENFJ": {"title": "정의로운 사회운동가", "jobs": "커리어 코치, 정치 리더, 시민단체 활동가", "desc": "타인의 성장을 돕는 리더십이 있으며 사교성이 매우 좋습니다."},
-    "ENTJ": {"title": "대담한 통솔자", "jobs": "CEO, 경영 컨설턴트, 벤처 캐피탈리스트", "desc": "장기적인 계획 수립에 능하며 효율적이고 결단력이 있습니다."}
+# 1. 페이지 설정
+st.set_page_config(page_title="나의 인생 직업 찾기", page_icon="🚀", layout="centered")
+
+# 2. 데이터 및 테마 설정
+mbti_info = {
+    "ISTJ": {"emoji": "🧐", "color": "#A6A6A6", "title": "청렴결백한 논리주의자", "jobs": ["회계사", "공무원", "데이터 분석가"], "strength": "책임감, 정확성"},
+    "ISFJ": {"emoji": "🛡️", "color": "#94D2BD", "title": "용감한 수호자", "jobs": ["간호사", "초등교사", "상담가"], "strength": "인내심, 헌신"},
+    "INFJ": {"emoji": "🔮", "color": "#B185DB", "title": "선의의 옹호자", "jobs": ["상담심리사", "작가", "예술가"], "strength": "통찰력, 공감"},
+    "INTJ": {"emoji": "♟️", "color": "#5E548E", "title": "용의주도한 전략가", "jobs": ["SW 개발자", "전략 기획자", "교수"], "strength": "논리, 독립성"},
+    "ISTP": {"emoji": "🛠️", "color": "#E9D8A6", "title": "만능 재주꾼", "jobs": ["엔지니어", "파일럿", "정비사"], "strength": "적응력, 손재주"},
+    "ISFP": {"emoji": "🎨", "color": "#F4A261", "title": "호기심 많은 예술가", "jobs": ["디자이너", "작곡가", "사진작가"], "strength": "겸손, 예술적 감각"},
+    "INFP": {"emoji": "🦋", "color": "#FFB703", "title": "열정적인 중재자", "jobs": ["작가", "심리치료사", "에디터"], "strength": "이상주의, 창의성"},
+    "INTP": {"emoji": "💡", "color": "#48CAE4", "title": "논리적인 사색가", "jobs": ["물리학자", "프로그래머", "철학자"], "strength": "지적 호기심, 분석"},
+    "ESTP": {"emoji": "🏃", "color": "#E76F51", "title": "모험을 즐기는 사업가", "jobs": ["기업가", "소방관", "마케터"], "strength": "활동성, 대담함"},
+    "ESFP": {"emoji": "🎤", "color": "#F15BB5", "title": "자유로운 영혼의 연예인", "jobs": ["배우", "승무원", "파티 플래너"], "strength": "사교성, 에너지"},
+    "ENFP": {"emoji": "🌟", "color": "#FFEE32", "title": "재기발랄한 활동가", "jobs": ["홍보 전문가", "카피라이터", "크리에이터"], "strength": "열정, 상상력"},
+    "ENTP": {"emoji": "🗣️", "color": "#00BBF9", "title": "뜨거운 논쟁을 즐기는 변론가", "jobs": ["변호사", "발명가", "광고 디렉터"], "strength": "임기응변, 독창성"},
+    "ESTJ": {"emoji": "📋", "color": "#264653", "title": "엄격한 관리자", "jobs": ["프로젝트 매니저", "법조인", "군 장교"], "strength": "조직 관리, 현실감"},
+    "ESFJ": {"emoji": "🤝", "color": "#FFCAD4", "title": "사교적인 외교관", "jobs": ["호텔리어", "비서", "사회복지사"], "strength": "협동심, 봉사 정신"},
+    "ENFJ": {"emoji": "📢", "color": "#FB5607", "title": "정의로운 사회운동가", "jobs": ["교사", "정치인", "코치"], "strength": "카리스마, 이타심"},
+    "ENTJ": {"emoji": "👑", "color": "#8338EC", "title": "대담한 통솔자", "jobs": ["CEO", "경영 컨설턴트", "투자자"], "strength": "결단력, 추진력"}
 }
 
-# 2. 웹 앱 UI 구성
-st.set_page_config(page_title="MBTI 직업 추천 서비스", page_icon="💼")
+# 3. 메인 화면 구성
+st.markdown("<h1 style='text-align: center;'>✨ 인생 직업 MBTI 탐색기 ✨</h1>", unsafe_allow_html=True)
+st.write("---")
 
-st.title("💼 MBTI 유형별 맞춤 직업 추천")
-st.write("자신의 MBTI를 선택하고 어울리는 직업군을 확인해 보세요!")
+# 사용자 입력부 (가운데 정렬 느낌을 위해 컬럼 활용)
+left, mid, right = st.columns([1, 2, 1])
+with mid:
+    user_mbti = st.selectbox("당신의 MBTI는 무엇인가요?", ["선택하세요"] + list(mbti_info.keys()))
 
-# 사이드바에서 선택
-selected_mbti = st.selectbox("당신의 MBTI 유형은 무엇인가요?", list(mbti_data.keys()))
-
-if selected_mbti:
-    info = mbti_data[selected_mbti]
+if user_mbti != "선택하세요":
+    # 재미 요소: 로딩 바 추가
+    with st.spinner('당신의 성향을 분석 중입니다...'):
+        time.sleep(1)
     
-    st.divider()
+    st.balloons() # 축하 풍선 효과!
     
-    col1, col2 = st.columns([1, 2])
+    data = mbti_info[user_mbti]
+    
+    # 유형 카드 스타일 출력
+    st.markdown(f"""
+        <div style="background-color: {data['color']}; padding: 30px; border-radius: 20px; text-align: center; color: white;">
+            <h1 style="font-size: 60px;">{data['emoji']}</h1>
+            <h2 style="margin-bottom: 0;">{user_mbti}</h2>
+            <h4 style="font-weight: 300;">{data['title']}</h4>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.write("###") # 간격 띄우기
+
+    # 상세 정보 2단 구성
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader(f"✨ {selected_mbti}")
-        st.caption(info['title'])
-        
+        st.subheader("💪 핵심 강점")
+        st.info(data['strength'])
+
     with col2:
-        st.info(f"**💡 특징:** {info['desc']}")
-        st.success(f"**🎯 추천 직업:** {info['jobs']}")
+        st.subheader("💼 추천 커리어")
+        for job in data['jobs']:
+            st.success(f"• {job}")
 
-    # 3. 간단한 성향 시각화 (임의 데이터)
-    st.write("### 📊 유형별 성향 분포 (예시)")
-    mbti_chars = list(selected_mbti)
-    chart_data = pd.DataFrame({
-        '지표': ['E/I', 'S/N', 'T/F', 'J/P'],
-        '강도': [70, 80, 60, 90] # 실제 데이터는 아니며 시각화 용도입니다.
-    })
-    st.bar_chart(chart_data.set_index('지표'))
+    # 재미 요소: 능력치 그래프 (랜덤인 듯 정교한 시각화)
+    st.write("---")
+    st.subheader(f"📊 {user_mbti} 유형 직무 역량 지표")
+    
+    # 예시 능력치 (유형에 따라 다르게 표현 가능)
+    cols = st.columns(4)
+    labels = ["창의성", "논리력", "친화력", "실행력"]
+    import random
+    for i, col in enumerate(cols):
+        val = random.randint(70, 100)
+        col.metric(labels[i], f"{val}%")
+        col.progress(val / 100)
 
-st.sidebar.title("About")
-st.sidebar.info("이 앱은 MBTI 성격 유형에 기초한 일반적인 직업 성향을 보여줍니다. 실제 직업 선택 시 참고용으로만 활용하세요!")
+else:
+    st.info("좌측 메뉴에서 MBTI를 선택해 주세요!")
+
+# 하단 푸터
+st.markdown("<br><br><p style='text-align: center; color: gray;'>© 2024 MBTI Career Finder | 재미로 보는 가이드입니다.</p>", unsafe_allow_html=True)

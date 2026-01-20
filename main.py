@@ -1,3 +1,3 @@
-import streamlit as st 
-
-st.title("첫 웹앱")
+import streamlit as st
+st.title("백정기의 첫 웹앱!")
+st.write('안녕하세요! 반갑습니다 :)')
